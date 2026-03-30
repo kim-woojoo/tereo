@@ -1,0 +1,39 @@
+<svg width="940" height="620" viewBox="0 0 940 620" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="940" height="620" fill="#F6F8FA"/>
+
+  <text x="48" y="44" fill="#57606A" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="700" letter-spacing="0.18em">TEREO PR COMMENT</text>
+  <text x="48" y="88" fill="#1F2328" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="26" font-weight="700">One sticky receipt. Updated on every push.</text>
+  <text x="48" y="116" fill="#57606A" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="16">What users actually see in the pull request.</text>
+
+  <rect x="48" y="156" width="844" height="396" rx="16" fill="#FFFFFF" stroke="#D0D7DE" stroke-width="2"/>
+
+  <circle cx="92" cy="200" r="18" fill="#DDF4FF" stroke="#0969DA" stroke-width="1.5"/>
+  <text x="81" y="206" fill="#0969DA" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="16" font-weight="700">gh</text>
+  <text x="122" y="197" fill="#1F2328" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="17" font-weight="700">github-actions[bot]</text>
+  <text x="292" y="197" fill="#57606A" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="15">commented now</text>
+  <text x="122" y="220" fill="#57606A" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14">same comment id, updated after each trusted proof run</text>
+
+  <line x1="80" y1="248" x2="860" y2="248" stroke="#D8DEE4" stroke-width="1.5"/>
+
+  <text x="92" y="292" fill="#1F2328" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="30" font-weight="700">TEREO</text>
+
+  <rect x="92" y="314" width="86" height="36" rx="10" fill="#DCFCE7" stroke="#166534" stroke-width="1.5"/>
+  <text x="135" y="333" fill="#166534" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="18" font-weight="700" text-anchor="middle" dominant-baseline="middle">KEEP</text>
+  <rect x="190" y="314" width="82" height="36" rx="10" fill="#EFF6FF" stroke="#1D4ED8" stroke-width="1.5"/>
+  <text x="231" y="333" fill="#1D4ED8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="18" font-weight="700" text-anchor="middle" dominant-baseline="middle">HIGH</text>
+
+  <rect x="92" y="372" width="424" height="42" rx="10" fill="#F6F8FA" stroke="#D0D7DE"/>
+  <text x="112" y="399" fill="#1F2328" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="19" font-weight="700">tests: 41 -&gt; 42 passing (+1)</text>
+
+  <text x="92" y="448" fill="#1F2328" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="18">Parser handles empty input</text>
+
+  <text x="92" y="484" fill="#57606A" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="16" font-weight="700" letter-spacing="0.04em">BASELINE</text>
+  <rect x="92" y="496" width="250" height="34" rx="8" fill="#F6F8FA" stroke="#D0D7DE"/>
+  <text x="110" y="518" fill="#1F2328" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="16">tests: 42 passing</text>
+
+  <text x="376" y="484" fill="#57606A" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="16" font-weight="700" letter-spacing="0.04em">NET</text>
+  <rect x="376" y="496" width="392" height="34" rx="8" fill="#F6F8FA" stroke="#D0D7DE"/>
+  <text x="394" y="518" fill="#1F2328" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="16">tests: 41 -&gt; 42 passing; +1</text>
+
+  <text x="92" y="574" fill="#57606A" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="16">&gt; keep only if gain &gt; noise</text>
+</svg>

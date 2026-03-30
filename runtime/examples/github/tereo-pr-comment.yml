@@ -1,0 +1,70 @@
+#
+# Copy this file to .github/workflows/tereo-pr-comment.yml
+# Copy runtime/examples/github/tereo-pr-comment.sh to .github/scripts/tereo-pr-comment.sh
+#
+# Change only these three lines.
+# Keep the loop.
+#
+# - TEREO_CHECK
+# - TEREO_SCOPE
+# - TEREO_PROMISE
+#
+# Start without control.
+# If the check is noisy or metric-based, add:
+# tereo control --repeat 5
+#
+name: TEREO PR Comment
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: read
+
+jobs:
+  tereo:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    env:
+      TEREO_CHECK: pytest -q
+      TEREO_SCOPE: src/parser.py
+      TEREO_PROMISE: Parser handles empty input
+    steps:
+      - name: Checkout PR head
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install TEREO
+        run: pip install tereo
+
+      - name: Compare base branch and PR head
+        id: prove
+        continue-on-error: true
+        run: |
+          git checkout "${{ github.event.pull_request.base.sha }}"
+          tereo init --check "${TEREO_CHECK}"
+          tereo prove --promise "Base branch is the current baseline"
+
+          git checkout "${{ github.event.pull_request.head.sha }}"
+          tereo prove --scope "${TEREO_SCOPE}" --promise "${TEREO_PROMISE}"
+
+      - name: Update sticky PR comment
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tereo comment | bash .github/scripts/tereo-pr-comment.sh
+
+      - name: Keep the job red when proof failed
+        if: steps.prove.outcome == 'failure'
+        run: exit 1
