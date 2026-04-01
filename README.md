@@ -12,7 +12,17 @@ The check can prove a bug fix, a behavior change, or a speedup.
 TEREO comes from Ancient Greek `τηρέω` (`tēréō`):
 to watch over, guard, preserve.
 
-One proofboard.
+One loop.
+
+<p>
+  <img
+    src="https://raw.githubusercontent.com/kim-woojoo/tereo/main/assets/readme/tereo-loop-diagram.svg"
+    alt="TEREO loop diagram"
+    width="860"
+  />
+</p>
+
+One kept receipt.
 
 <p>
   <img
@@ -27,14 +37,24 @@ One proofboard.
 1. Install TEREO.
 
 ```bash
-pip install tereo
+python3 -m pip install tereo
 ```
 
 2. Feel the loop.
 
 ```bash
-tereo demo
+python3 -m tereo demo
 ```
+
+What it looks like:
+
+<p>
+  <img
+    src="assets/readme/tereo-demo.gif"
+    alt="TEREO demo in the terminal"
+    width="800"
+  />
+</p>
 
 Working on this repo itself? See the local setup in [runtime/README.md](runtime/README.md).
 
@@ -51,19 +71,19 @@ confidence: high
 1. Install TEREO.
 
 ```bash
-pip install tereo
+python3 -m pip install tereo
 ```
 
 2. Run TEREO locally.
 
 ```bash
-tereo --help
+python3 -m tereo --help
 ```
 
-3. If you prefer module execution, run:
+3. If the `tereo` command is already on your PATH, this also works:
 
 ```bash
-python3 -m tereo --help
+tereo --help
 ```
 
 Use your own check.
