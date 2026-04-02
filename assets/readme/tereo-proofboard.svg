@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="980" viewBox="0 0 1280 980" role="img" aria-labelledby="title desc">
+  <title id="title">TEREO proofboard</title>
+  <desc id="desc">A TEREO proofboard showing the baseline loop, a kept behavior receipt, and a kept performance gain becoming the next baseline.</desc>
+  <style>
+    .bg { fill: #fbfbf8; }
+    .card { fill: #ffffff; stroke: #111111; stroke-width: 2; }
+    .chip { fill: #ffffff; stroke: #111111; stroke-width: 2; }
+    .keep { fill: #d9f5df; stroke: #111111; stroke-width: 2; }
+    .ok { fill: #5dbb73; stroke: #111111; stroke-width: 1.5; }
+    .ink { fill: #111111; }
+    .muted { fill: #6a6a6a; }
+    .track { fill: #efefef; }
+    .bar { fill: #111111; }
+    .newbase { fill: #d9f5df; stroke: #111111; stroke-width: 2; }
+    .noise { fill: #d9d9d9; stroke: #111111; stroke-width: 2; }
+    .rule { stroke: #111111; stroke-width: 2; }
+    .sans { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    .mono { font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; }
+    .eyebrow { font-size: 13px; letter-spacing: 0.18em; }
+    .hero { font-size: 36px; font-weight: 700; }
+    .sub { font-size: 18px; }
+    .chiptext { font-size: 21px; font-weight: 700; }
+    .arrow { font-size: 28px; font-weight: 700; }
+    .metric { font-size: 31px; font-weight: 700; }
+    .status { font-size: 20px; font-weight: 700; }
+    .small { font-size: 18px; }
+    .label { font-size: 20px; }
+    .barlabel { font-size: 17px; }
+    .value { font-size: 22px; font-weight: 700; }
+    .law { font-size: 20px; }
+    .footer { font-size: 19px; }
+  </style>
+
+  <rect class="bg" width="1280" height="980"/>
+
+  <text x="72" y="50" class="sans ink eyebrow">TEREO PROOFBOARD</text>
+  <text x="72" y="102" class="sans ink hero">Keep one true gain. Start again from there.</text>
+  <text x="72" y="134" class="sans muted sub">bug fix · feature change · speedup</text>
+
+  <rect x="72" y="178" width="214" height="52" rx="14" class="chip"/>
+  <text x="179" y="211" text-anchor="middle" class="mono ink chiptext">baseline</text>
+
+  <text x="316" y="211" class="mono ink arrow">-&gt;</text>
+
+  <rect x="372" y="178" width="230" height="52" rx="14" class="chip"/>
+  <text x="487" y="211" text-anchor="middle" class="mono ink chiptext">one change</text>
+
+  <text x="632" y="211" class="mono ink arrow">-&gt;</text>
+
+  <rect x="688" y="178" width="204" height="52" rx="14" class="chip"/>
+  <text x="790" y="211" text-anchor="middle" class="mono ink chiptext">receipt</text>
+
+  <text x="922" y="211" class="mono ink arrow">-&gt;</text>
+
+  <rect x="986" y="178" width="222" height="52" rx="14" class="chip"/>
+  <text x="1097" y="211" text-anchor="middle" class="mono ink chiptext">next baseline</text>
+
+  <text x="72" y="268" class="mono ink law">keep only if gain &gt; noise</text>
+
+  <rect x="72" y="320" width="548" height="548" rx="28" class="card"/>
+  <text x="116" y="372" class="sans ink eyebrow">BEHAVIOR RECEIPT</text>
+  <rect x="460" y="342" width="118" height="44" rx="14" class="keep"/>
+  <text x="519" y="370" text-anchor="middle" class="mono ink status">KEEP</text>
+
+  <text x="116" y="438" class="mono ink metric">tests 41 -&gt; 42 passing</text>
+  <text x="116" y="470" class="sans muted small">one bug fixed, one more test passing</text>
+
+  <line x1="116" y1="512" x2="576" y2="512" class="rule"/>
+
+  <text x="116" y="570" class="mono muted label">gain</text>
+  <text x="576" y="570" text-anchor="end" class="mono ink value">+1 passing</text>
+
+  <text x="116" y="628" class="mono muted label">noise</text>
+  <text x="576" y="628" text-anchor="end" class="mono ink value">&#177;0</text>
+
+  <text x="116" y="686" class="mono muted label">confidence</text>
+  <text x="576" y="686" text-anchor="end" class="mono ink value">high</text>
+
+  <text x="116" y="744" class="mono muted label">check</text>
+  <circle cx="458" cy="736" r="10" class="ok"/>
+  <text x="576" y="744" text-anchor="end" class="mono ink value">green</text>
+
+  <line x1="116" y1="790" x2="576" y2="790" class="rule"/>
+  <text x="116" y="828" class="mono ink law">next baseline: tests 42 passing</text>
+
+  <rect x="660" y="320" width="548" height="548" rx="28" class="card"/>
+  <text x="704" y="372" class="sans ink eyebrow">PERFORMANCE RECEIPT</text>
+  <text x="704" y="420" class="sans ink small">A kept speedup becomes the next baseline.</text>
+
+  <text x="704" y="490" class="sans muted barlabel">old baseline</text>
+  <rect x="826" y="466" width="196" height="34" rx="11" class="track"/>
+  <rect x="826" y="466" width="196" height="34" rx="11" class="bar"/>
+  <text x="1118" y="490" text-anchor="end" class="mono ink value">1.42s</text>
+
+  <text x="704" y="558" class="sans muted barlabel">kept speedup</text>
+  <rect x="826" y="534" width="196" height="34" rx="11" class="track"/>
+  <rect x="826" y="534" width="152" height="34" rx="11" class="bar"/>
+  <text x="1118" y="558" text-anchor="end" class="mono ink value">1.11s</text>
+
+  <text x="704" y="626" class="sans muted barlabel">next baseline</text>
+  <rect x="826" y="602" width="152" height="34" rx="11" class="newbase"/>
+  <text x="1118" y="626" text-anchor="end" class="mono ink value">1.11s</text>
+
+  <text x="704" y="694" class="sans muted barlabel">noise</text>
+  <rect x="826" y="670" width="44" height="34" rx="11" class="noise"/>
+  <text x="1118" y="694" text-anchor="end" class="mono ink value">&#177;0.05s</text>
+
+  <line x1="704" y1="742" x2="1160" y2="742" class="rule"/>
+  <rect x="704" y="770" width="116" height="40" rx="12" class="keep"/>
+  <text x="762" y="796" text-anchor="middle" class="mono ink status">KEEP</text>
+  <text x="850" y="792" class="mono ink footer">gain +21.8%</text>
+  <text x="850" y="824" class="mono muted small">new baseline: 1.11s</text>
+</svg>

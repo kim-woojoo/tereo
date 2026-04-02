@@ -1,0 +1,119 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800" role="img" aria-labelledby="title desc">
+  <title id="title">TEREO short loop diagram for Hacker News</title>
+  <desc id="desc">A short TEREO loop diagram showing fixed proof, AI patch, judge, receipt, and dashed return loops for same topic and new topic.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="8.8" refY="4.5" orient="auto" markerUnits="strokeWidth">
+      <path d="M 0 0 L 9 4.5 L 0 9 z" fill="#1f2328"/>
+    </marker>
+    <style>
+      .bg { fill: #ffffff; }
+      .card { fill: #f6f8fa; stroke: #1f2328; stroke-width: 2; }
+      .pill { fill: #ffffff; stroke: #d0d7de; stroke-width: 1.4; }
+      .judge { fill: #ffffff; stroke: #1f2328; stroke-width: 2; }
+      .keep { fill: #dcfce7; stroke: #166534; stroke-width: 1.3; }
+      .hold { fill: #fef3c7; stroke: #92400e; stroke-width: 1.3; }
+      .drop { fill: #fee2e2; stroke: #991b1b; stroke-width: 1.3; }
+      .receipt { fill: #ffffff; stroke: #1f2328; stroke-width: 2; }
+      .loopTag { fill: #ffffff; stroke: #d0d7de; stroke-width: 1.2; }
+      .ink { fill: #1f2328; }
+      .muted { fill: #57606a; }
+      .rule { stroke: #d8dee4; stroke-width: 1.2; }
+      .flow { fill: none; stroke: #1f2328; stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round; marker-end: url(#arrow); }
+      .return { fill: none; stroke: #57606a; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 14 10; }
+      .stepMark { fill: #1f2328; }
+      .returnHead { fill: #57606a; }
+      .dropLine { fill: none; stroke: #1f2328; stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round; marker-end: url(#arrow); }
+      .sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      .mono { font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; }
+      .eyebrow { font-size: 13px; letter-spacing: 0.18em; font-weight: 700; }
+      .title { font-size: 36px; font-weight: 700; }
+      .sub { font-size: 17px; }
+      .head { font-size: 22px; font-weight: 700; }
+      .body { font-size: 14px; }
+      .monoBody { font-size: 13px; }
+      .law { font-size: 18px; font-weight: 700; }
+      .chip { font-size: 12px; font-weight: 700; }
+      .loopText { font-size: 14px; font-weight: 700; }
+      .baseline { font-size: 20px; font-weight: 700; }
+    </style>
+  </defs>
+
+  <rect width="1200" height="800" class="bg"/>
+
+  <text x="72" y="62" class="sans ink eyebrow">TEREO</text>
+  <text x="72" y="112" class="sans ink title">AI patch in. Keep, hold, or drop out.</text>
+  <text x="72" y="144" class="sans muted sub">One topic, one fixed check, one readable receipt</text>
+
+  <line x1="72" y1="220" x2="1128" y2="220" class="rule"/>
+
+  <g transform="translate(36 286)">
+    <rect width="238" height="232" rx="22" class="card"/>
+    <text x="119" y="54" text-anchor="middle" class="sans ink head">Fixed proof</text>
+    <text x="119" y="92" text-anchor="middle" class="sans muted body">Freeze what you trust.</text>
+    <rect x="35" y="126" width="168" height="84" rx="14" class="pill"/>
+    <text x="119" y="149" text-anchor="middle" class="mono ink monoBody">promise</text>
+    <text x="119" y="173" text-anchor="middle" class="mono ink monoBody">scope</text>
+    <text x="119" y="197" text-anchor="middle" class="mono ink monoBody">check</text>
+  </g>
+
+  <g transform="translate(302 286)">
+    <rect width="238" height="232" rx="22" class="card"/>
+    <text x="119" y="54" text-anchor="middle" class="sans ink head">AI patch</text>
+    <text x="119" y="92" text-anchor="middle" class="sans muted body">Make one small change.</text>
+    <rect x="35" y="138" width="168" height="42" rx="14" class="pill"/>
+    <text x="119" y="165" text-anchor="middle" class="mono ink monoBody">one change</text>
+  </g>
+
+  <g transform="translate(568 286)">
+    <rect width="238" height="232" rx="22" class="judge"/>
+    <text x="119" y="54" text-anchor="middle" class="sans ink head">Judge</text>
+    <text x="119" y="92" text-anchor="middle" class="sans muted body">Run the same check again.</text>
+    <rect x="35" y="126" width="168" height="84" rx="14" class="pill"/>
+    <text x="119" y="149" text-anchor="middle" class="mono ink monoBody">gain</text>
+    <text x="119" y="173" text-anchor="middle" class="mono ink monoBody">noise</text>
+    <text x="119" y="197" text-anchor="middle" class="mono ink monoBody">confidence</text>
+  </g>
+
+  <g transform="translate(834 286)">
+    <rect width="238" height="232" rx="22" class="receipt"/>
+    <text x="119" y="54" text-anchor="middle" class="sans ink head">Receipt</text>
+    <text x="119" y="92" text-anchor="middle" class="sans muted body">Write the decision down.</text>
+
+    <rect x="17" y="132" width="64" height="34" rx="10" class="keep"/>
+    <text x="49" y="154" text-anchor="middle" class="mono ink chip">KEEP</text>
+
+    <rect x="87" y="132" width="64" height="34" rx="10" class="hold"/>
+    <text x="119" y="154" text-anchor="middle" class="mono ink chip">HOLD</text>
+
+    <rect x="157" y="132" width="64" height="34" rx="10" class="drop"/>
+    <text x="189" y="154" text-anchor="middle" class="mono ink chip">DROP</text>
+
+    <rect x="23" y="182" width="192" height="34" rx="12" class="pill"/>
+    <text x="119" y="204" text-anchor="middle" class="sans muted body">verdict + scorecard</text>
+  </g>
+
+  <path d="M 279 392 L 297 402 L 279 412 Z" class="stepMark"/>
+  <path d="M 545 392 L 563 402 L 545 412 Z" class="stepMark"/>
+  <path d="M 811 392 L 829 402 L 811 412 Z" class="stepMark"/>
+
+  <g transform="translate(250 626)">
+    <rect width="700" height="76" rx="20" class="pill"/>
+    <text x="350" y="48" text-anchor="middle" class="sans ink baseline">KEEP becomes the next baseline</text>
+  </g>
+
+  <path d="M 953 518 L 874 626" class="dropLine"/>
+  <path d="M 428 626 C 340 626 270 622 220 616 C 182 610 163 582 155 542" class="return"/>
+  <path d="M 614 626 C 566 626 524 622 492 616 C 454 608 431 580 421 542" class="return"/>
+  <path d="M 148 542 L 162 542 L 155 526 Z" class="returnHead"/>
+  <path d="M 414 542 L 428 542 L 421 526 Z" class="returnHead"/>
+
+  <g transform="translate(91 562)">
+    <rect width="128" height="32" rx="10" class="loopTag"/>
+    <text x="64" y="21" text-anchor="middle" class="sans muted loopText">new topic</text>
+  </g>
+
+  <g transform="translate(348 562)">
+    <rect width="146" height="32" rx="10" class="loopTag"/>
+    <text x="73" y="21" text-anchor="middle" class="sans muted loopText">same topic</text>
+  </g>
+</svg>
