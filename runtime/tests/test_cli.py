@@ -3,7 +3,10 @@ from __future__ import annotations
 import csv
 import io
 import os
+import subprocess
+import sys
 import tempfile
+import time
 import unittest
 from contextlib import contextmanager, redirect_stdout
 from pathlib import Path
@@ -36,6 +39,37 @@ class MetricChangeTests(unittest.TestCase):
 
 
 class RuntimeFlowTests(unittest.TestCase):
+    def cli_env(self, thread_id: str | None = None, extra: dict[str, str] | None = None) -> dict[str, str]:
+        repo_root = Path(__file__).resolve().parents[2]
+        env = os.environ.copy()
+        pythonpath = str(repo_root / "runtime" / "src")
+        if env.get("PYTHONPATH"):
+            env["PYTHONPATH"] = pythonpath + os.pathsep + env["PYTHONPATH"]
+        else:
+            env["PYTHONPATH"] = pythonpath
+        if thread_id is not None:
+            env["CODEX_THREAD_ID"] = thread_id
+        if extra:
+            env.update(extra)
+        return env
+
+    def run_cli_subprocess(
+        self,
+        workspace: Path,
+        argv: list[str],
+        *,
+        thread_id: str | None = None,
+        extra_env: dict[str, str] | None = None,
+    ) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            [sys.executable, "-m", "tereo", *argv],
+            cwd=workspace,
+            env=self.cli_env(thread_id=thread_id, extra=extra_env),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+
     def run_main(self, argv: list[str]) -> tuple[int, str]:
         buffer = io.StringIO()
         with redirect_stdout(buffer):
@@ -182,6 +216,284 @@ class RuntimeFlowTests(unittest.TestCase):
                 self.assertIn("Receipt Log", log_output)
                 self.assertIn("| hold | latency: 10.000000 ms | Current latency is the baseline", log_output)
                 self.assertIn("| keep | latency: 10.000000 ms -> 8.000000 ms; 2.000000 ms better (20.00%) | Cache hits lower latency", log_output)
+
+    def test_prove_keeps_baselines_separate_when_check_changes(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            workspace = Path(tempdir)
+            with pushd(workspace):
+                self.run_main(
+                    [
+                        "init",
+                        "--check",
+                        'python3 -c "print(\'latency_ms: 10\')"',
+                        "--metric-pattern",
+                        r"latency_ms: ([0-9.]+)",
+                        "--direction",
+                        "lower",
+                        "--metric-name",
+                        "latency",
+                        "--metric-unit",
+                        "ms",
+                    ]
+                )
+
+                original_code, original_output = self.run_main(
+                    [
+                        "prove",
+                        "--proof",
+                        "original",
+                        "--promise",
+                        "Current latency is the original baseline",
+                    ]
+                )
+                self.assertEqual(original_code, 0)
+                self.assertIn("verdict: hold", original_output)
+                self.assertIn("latency: 10.000000 ms", original_output)
+                state = cli.load_state(workspace)
+                original_proof = state["active_proof"]
+                original_baseline = state["baseline_receipt"]
+
+                switched_code, switched_output = self.run_main(
+                    [
+                        "prove",
+                        "--proof",
+                        "separate",
+                        "--check",
+                        'python3 -c "print(\'latency_ms: 30\')"',
+                        "--promise",
+                        "Current latency is a separate baseline",
+                    ]
+                )
+                self.assertEqual(switched_code, 0)
+                self.assertIn("verdict: hold", switched_output)
+                self.assertIn("latency: 30.000000 ms", switched_output)
+                self.assertNotIn("10.000000 ms -> 30.000000 ms", switched_output)
+                state = cli.load_state(workspace)
+                switched_proof = state["active_proof"]
+                switched_baseline = state["baseline_receipt"]
+                self.assertNotEqual(original_proof, switched_proof)
+                self.assertNotEqual(original_baseline, switched_baseline)
+
+                back_code, back_output = self.run_main(
+                    [
+                        "prove",
+                        "--proof",
+                        "original",
+                        "--check",
+                        'python3 -c "print(\'latency_ms: 8\')"',
+                        "--promise",
+                        "Cache hits lower latency for the original baseline",
+                    ]
+                )
+                self.assertEqual(back_code, 0)
+                self.assertIn("verdict: keep", back_output)
+                self.assertIn("latency: 10.000000 ms -> 8.000000 ms", back_output)
+                self.assertNotIn("latency: 30.000000 ms -> 8.000000 ms", back_output)
+
+                state = cli.load_state(workspace)
+                self.assertEqual(state["active_proof"], "original")
+                self.assertEqual(state["proofs"]["separate"]["baseline_receipt"], switched_baseline)
+                latest_receipt = cli.read_receipt(workspace, state["latest_receipt"])
+                self.assertEqual(latest_receipt["baseline"]["id"], original_baseline)
+                self.assertEqual(latest_receipt["proof"]["key"], "original")
+
+                _, log_output = self.run_main(["log", "--proof", "original", "--last", "5"])
+                self.assertIn("Current latency is the original baseline", log_output)
+                self.assertIn("Cache hits lower latency for the original baseline", log_output)
+                self.assertNotIn("Current latency is a separate baseline", log_output)
+
+    def test_parallel_proofs_do_not_clobber_each_other(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            workspace = Path(tempdir)
+            slow = subprocess.Popen(
+                [
+                    sys.executable,
+                    "-m",
+                    "tereo",
+                    "prove",
+                    "--check",
+                    'python3 -c "import time; time.sleep(0.3); print(\'latency_ms: 10\')"',
+                    "--metric-pattern",
+                    r"latency_ms: ([0-9.]+)",
+                    "--direction",
+                    "lower",
+                    "--metric-name",
+                    "latency",
+                    "--metric-unit",
+                    "ms",
+                    "--promise",
+                    "Alpha baseline",
+                ],
+                cwd=workspace,
+                env=self.cli_env(thread_id="alpha"),
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+            time.sleep(0.05)
+            fast = subprocess.Popen(
+                [
+                    sys.executable,
+                    "-m",
+                    "tereo",
+                    "prove",
+                    "--check",
+                    'python3 -c "print(\'latency_ms: 20\')"',
+                    "--metric-pattern",
+                    r"latency_ms: ([0-9.]+)",
+                    "--direction",
+                    "lower",
+                    "--metric-name",
+                    "latency",
+                    "--metric-unit",
+                    "ms",
+                    "--promise",
+                    "Beta baseline",
+                ],
+                cwd=workspace,
+                env=self.cli_env(thread_id="beta"),
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+
+            slow_stdout, slow_stderr = slow.communicate()
+            fast_stdout, fast_stderr = fast.communicate()
+            self.assertEqual(slow.returncode, 0, slow_stderr)
+            self.assertEqual(fast.returncode, 0, fast_stderr)
+            self.assertIn("verdict: hold", slow_stdout)
+            self.assertIn("verdict: hold", fast_stdout)
+
+            state = cli.load_state(workspace)
+            alpha_key = "thread:alpha"
+            beta_key = "thread:beta"
+            self.assertIn(alpha_key, state["proofs"])
+            self.assertIn(beta_key, state["proofs"])
+            self.assertNotEqual(state["proofs"][alpha_key]["baseline_receipt"], state["proofs"][beta_key]["baseline_receipt"])
+
+    def test_same_proof_parallel_runs_serialize_into_baseline_then_try(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            workspace = Path(tempdir)
+            env = self.cli_env(thread_id="shared")
+            baseline_proc = subprocess.Popen(
+                [
+                    sys.executable,
+                    "-m",
+                    "tereo",
+                    "prove",
+                    "--check",
+                    'python3 -c "import time; time.sleep(0.3); print(\'latency_ms: 10\')"',
+                    "--metric-pattern",
+                    r"latency_ms: ([0-9.]+)",
+                    "--direction",
+                    "lower",
+                    "--metric-name",
+                    "latency",
+                    "--metric-unit",
+                    "ms",
+                    "--promise",
+                    "Shared baseline",
+                ],
+                cwd=workspace,
+                env=env,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+            time.sleep(0.05)
+            try_proc = subprocess.Popen(
+                [
+                    sys.executable,
+                    "-m",
+                    "tereo",
+                    "prove",
+                    "--check",
+                    'python3 -c "print(\'latency_ms: 8\')"',
+                    "--metric-pattern",
+                    r"latency_ms: ([0-9.]+)",
+                    "--direction",
+                    "lower",
+                    "--metric-name",
+                    "latency",
+                    "--metric-unit",
+                    "ms",
+                    "--promise",
+                    "Shared improvement",
+                ],
+                cwd=workspace,
+                env=env,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+
+            baseline_stdout, baseline_stderr = baseline_proc.communicate()
+            try_stdout, try_stderr = try_proc.communicate()
+            self.assertEqual(baseline_proc.returncode, 0, baseline_stderr)
+            self.assertEqual(try_proc.returncode, 0, try_stderr)
+            self.assertIn("verdict: hold", baseline_stdout)
+            self.assertIn("verdict: keep", try_stdout)
+            self.assertIn("latency: 10.000000 ms -> 8.000000 ms", try_stdout)
+
+            state = cli.load_state(workspace)
+            proof_key = "thread:shared"
+            latest = cli.read_receipt(workspace, state["proofs"][proof_key]["latest_receipt"])
+            self.assertEqual(latest["kind"], "try")
+            self.assertEqual(latest["baseline"]["id"], state["proofs"][proof_key]["initial_baseline_receipt"])
+
+    def test_show_and_log_follow_thread_lane_without_manual_proof(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            workspace = Path(tempdir)
+            alpha = self.run_cli_subprocess(
+                workspace,
+                [
+                    "prove",
+                    "--check",
+                    'python3 -c "print(\'latency_ms: 10\')"',
+                    "--metric-pattern",
+                    r"latency_ms: ([0-9.]+)",
+                    "--direction",
+                    "lower",
+                    "--metric-name",
+                    "latency",
+                    "--metric-unit",
+                    "ms",
+                    "--promise",
+                    "Alpha baseline",
+                ],
+                thread_id="alpha-view",
+            )
+            beta = self.run_cli_subprocess(
+                workspace,
+                [
+                    "prove",
+                    "--check",
+                    'python3 -c "print(\'latency_ms: 20\')"',
+                    "--metric-pattern",
+                    r"latency_ms: ([0-9.]+)",
+                    "--direction",
+                    "lower",
+                    "--metric-name",
+                    "latency",
+                    "--metric-unit",
+                    "ms",
+                    "--promise",
+                    "Beta baseline",
+                ],
+                thread_id="beta-view",
+            )
+            self.assertEqual(alpha.returncode, 0, alpha.stderr)
+            self.assertEqual(beta.returncode, 0, beta.stderr)
+
+            alpha_show = self.run_cli_subprocess(workspace, ["show"], thread_id="alpha-view")
+            alpha_log = self.run_cli_subprocess(workspace, ["log", "--last", "5"], thread_id="alpha-view")
+            beta_show = self.run_cli_subprocess(workspace, ["show"], thread_id="beta-view")
+
+            self.assertIn("promise: Alpha baseline", alpha_show.stdout)
+            self.assertNotIn("Beta baseline", alpha_show.stdout)
+            self.assertIn("Alpha baseline", alpha_log.stdout)
+            self.assertNotIn("Beta baseline", alpha_log.stdout)
+            self.assertIn("promise: Beta baseline", beta_show.stdout)
 
     def test_prove_auto_doubt_turns_weak_signal_into_hold(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:
@@ -354,6 +666,8 @@ class RuntimeFlowTests(unittest.TestCase):
                         "try",
                         "--check",
                         'python3 -c "print(\'ok\')"',
+                        "--timeout-seconds",
+                        "0.2",
                         "--promise",
                         "The check should finish quickly",
                     ]

@@ -1,12 +1,21 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
+import os
+import tempfile
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from tereo.constants import APP_DIR, PROMISES_DIR, RECEIPTS_DIR, RESULTS_FILE, RESULT_FIELDS, STATE_FILE
 from tereo.measure import metric_change, summarize_metrics
+
+try:
+    import fcntl
+except ImportError:  # pragma: no cover
+    fcntl = None
 
 
 PUBLIC_VERDICTS = {
@@ -24,6 +33,7 @@ def part(receipt: Optional[Dict[str, Any]], name: str) -> Dict[str, Any]:
 
 
 def baseline_block(receipt: Optional[Dict[str, Any]]) -> Dict[str, Any]: return part(receipt, "baseline")
+def proof_block(receipt: Optional[Dict[str, Any]]) -> Dict[str, Any]: return part(receipt, "proof")
 def run_block(receipt: Optional[Dict[str, Any]]) -> Dict[str, Any]: return part(receipt, "run")
 def metric_block(receipt: Optional[Dict[str, Any]]) -> Dict[str, Any]: return part(receipt, "metric")
 def evidence_block(receipt: Optional[Dict[str, Any]]) -> Dict[str, Any]: return part(receipt, "evidence")
@@ -32,6 +42,9 @@ def ci_bounds(evidence: Dict[str, Any], key: str = "ci") -> Tuple[Optional[float
 def workspace_root(cwd: Path) -> Path: return cwd / APP_DIR
 def state_path(cwd: Path) -> Path: return workspace_root(cwd) / STATE_FILE
 def results_path(cwd: Path) -> Path: return workspace_root(cwd) / RESULTS_FILE
+def locks_root(cwd: Path) -> Path: return workspace_root(cwd) / "locks"
+def workspace_lock_path(cwd: Path) -> Path: return locks_root(cwd) / "workspace.lock"
+def proof_lock_path(cwd: Path, proof_key: str) -> Path: return locks_root(cwd) / f"{hashlib.sha1(proof_key.encode('utf-8')).hexdigest()}.lock"
 
 
 def ensure_results_file(cwd: Path) -> Path:
@@ -48,6 +61,7 @@ def ensure_workspace(cwd: Path) -> Path:
     root = workspace_root(cwd)
     (root / RECEIPTS_DIR).mkdir(parents=True, exist_ok=True)
     (root / PROMISES_DIR).mkdir(parents=True, exist_ok=True)
+    locks_root(cwd).mkdir(parents=True, exist_ok=True)
     ensure_results_file(cwd)
     return root
 
@@ -59,7 +73,46 @@ def load_state(cwd: Path) -> Dict[str, Any]:
 
 def save_state(cwd: Path, state: Dict[str, Any]) -> None:
     ensure_workspace(cwd)
-    state_path(cwd).write_text(json.dumps(state, indent=2) + "\n")
+    atomic_write_text(state_path(cwd), json.dumps(state, indent=2) + "\n")
+
+
+def atomic_write_text(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp_path = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.", suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            handle.write(text)
+        os.replace(tmp_path, path)
+    finally:
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+
+
+@contextmanager
+def file_lock(path: Path):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a+", encoding="utf-8") as handle:
+        if fcntl is not None:
+            fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            if fcntl is not None:
+                fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+
+
+@contextmanager
+def workspace_lock(cwd: Path):
+    ensure_workspace(cwd)
+    with file_lock(workspace_lock_path(cwd)):
+        yield
+
+
+@contextmanager
+def proof_lock(cwd: Path, proof_key: str):
+    ensure_workspace(cwd)
+    with file_lock(proof_lock_path(cwd, proof_key)):
+        yield
 
 
 def format_metric_value(value: Optional[float], unit: Optional[str] = None) -> str: return "(n/a)" if value is None else f"{value:.6f}" + (f" {unit}" if unit else "")
@@ -245,8 +298,8 @@ def save_receipt(cwd: Path, receipt: Dict[str, Any]) -> Path:
     root = ensure_workspace(cwd)
     json_path = root / RECEIPTS_DIR / f"{receipt['id']}.json"
     md_path = root / RECEIPTS_DIR / f"{receipt['id']}.md"
-    json_path.write_text(json.dumps(receipt, indent=2) + "\n")
-    md_path.write_text(make_receipt_markdown(receipt).rstrip() + "\n")
+    atomic_write_text(json_path, json.dumps(receipt, indent=2) + "\n")
+    atomic_write_text(md_path, make_receipt_markdown(receipt).rstrip() + "\n")
     return md_path
 
 
@@ -299,9 +352,24 @@ def read_receipt(cwd: Path, receipt_id: str) -> Dict[str, Any]:
     return json.loads(latest_receipt_path(cwd, receipt_id).read_text())
 
 
-def list_receipts(cwd: Path) -> List[Dict[str, Any]]:
+def receipt_matches_proof(receipt: Dict[str, Any], proof: Dict[str, Any]) -> bool:
+    current = proof_block(receipt)
+    if current.get("key"):
+        return current.get("key") == proof.get("key")
+
+    metric = metric_block(receipt)
+    return (
+        run_block(receipt).get("check") == proof.get("check")
+        and (metric.get("name") or "metric") == (proof.get("metric_name") or "metric")
+        and metric.get("direction") == proof.get("metric_direction")
+        and metric.get("unit") == proof.get("metric_unit")
+    )
+
+
+def list_receipts(cwd: Path, proof: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
     root = workspace_root(cwd) / RECEIPTS_DIR
-    return [] if not root.exists() else [json.loads(path.read_text()) for path in sorted(root.glob("*.json"))]
+    receipts = [] if not root.exists() else [json.loads(path.read_text()) for path in sorted(root.glob("*.json"))]
+    return receipts if not proof else [receipt for receipt in receipts if receipt_matches_proof(receipt, proof)]
 
 
 def build_report_text(

@@ -1,0 +1,7 @@
+interface:
+  display_name: "TEREO"
+  short_description: "Prove one small change and reject false gains."
+  default_prompt: "Use $tereo when one repeatable check can judge one small change. Let TEREO choose the proof lane automatically, run `tereo prove`, read the receipt, and keep only what proves itself."
+
+policy:
+  allow_implicit_invocation: true

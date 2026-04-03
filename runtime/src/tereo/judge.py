@@ -78,6 +78,7 @@ def build_receipt(
     kind: str,
     promise: str,
     scope: List[str],
+    proof: Dict[str, Any],
     run: Dict[str, Any],
     baseline_receipt: Optional[Dict[str, Any]],
     metric_context: Dict[str, Any],
@@ -115,6 +116,13 @@ def build_receipt(
         "kind": kind,
         "promise": promise,
         "scope": scope,
+        "proof": {
+            "key": proof.get("key"),
+            "check": proof.get("check"),
+            "metric_name": proof.get("metric_name"),
+            "metric_direction": proof.get("metric_direction"),
+            "metric_unit": proof.get("metric_unit"),
+        },
         "baseline": {
             "id": baseline_receipt.get("id") if baseline_receipt else None,
             "exit": baseline_run.get("exit") if baseline_receipt else None,
