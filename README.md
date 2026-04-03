@@ -13,6 +13,9 @@ The check can prove a bug fix, a behavior change, or a speedup.
 TEREO comes from Ancient Greek `τηρέω` (`tēréō`):
 to watch over, guard, preserve.
 
+Want the full story? Read the blog post:
+[What Is TEREO?](https://kimwoojoo.me/en/blog/what-is-tereo)
+
 One loop.
 
 <p>
