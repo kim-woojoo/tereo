@@ -7,6 +7,7 @@ TEREO is a proof layer for AI coding.
 Each kept receipt becomes the next baseline.
 
 It watches one small change, reruns one fixed check, and writes one readable receipt.
+The check should show one gain and catch the core breakage that would make that gain false.
 The check can prove a bug fix, a behavior change, or a speedup.
 
 TEREO comes from Ancient Greek `τηρέω` (`tēréō`):
@@ -115,6 +116,8 @@ Everything else is there to support this surface, not to replace it.
 ## Narrow By Design
 
 TEREO is strongest when one fixed check can judge one small change.
+That check should include both what should get better and what must stay true.
+If a patch hits the promise but breaks the core, that is a false gain, not a keep.
 That is a feature, not a full replacement for broader product judgment.
 
 ## Read Next

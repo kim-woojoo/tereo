@@ -62,6 +62,8 @@ PRESETS: Dict[str, Dict[str, Any]] = {
     },
 }
 
+CHECK_SHAPE_HINT = "good check: show one gain and catch the core breakage that would make that gain false."
+
 
 class TereoArgumentParser(argparse.ArgumentParser):
     def format_help(self) -> str:
@@ -375,6 +377,7 @@ def cmd_init(args: argparse.Namespace) -> int:
     print(f"timeout_seconds: {state.get('timeout_seconds', '(none)')}")
     if preset.get("summary"):
         print(f"preset_note: {preset['summary']}")
+    print(CHECK_SHAPE_HINT)
     return 0
 
 
@@ -392,7 +395,7 @@ def cmd_prove(args: argparse.Namespace) -> int:
     exit_code, receipt, md_path = execute_run(kind, args)
     print_run_result(kind, receipt, md_path)
     if kind == "baseline":
-        print("next: make one small change, then run `tereo prove` again.")
+        print("next: make one small change, keep the same check, then run `tereo prove` again.")
     return exit_code
 
 
@@ -527,6 +530,7 @@ def cmd_doctor(_: argparse.Namespace) -> int:
         print(f"  {tool}: {shutil.which(tool) or '(missing)'}")
     suggestions = detect_presets(cwd)
     print("suggested first checks:")
+    print(f"  {CHECK_SHAPE_HINT}")
     if suggestions:
         for name, reason in suggestions:
             preset = PRESETS[name]
@@ -539,7 +543,7 @@ def cmd_doctor(_: argparse.Namespace) -> int:
 
 
 def add_shared_arguments(parser: argparse.ArgumentParser, promise_required: bool = True) -> None:
-    parser.add_argument("--check", help="Shell command used as the fixed check.")
+    parser.add_argument("--check", help="Shell command used as the fixed check. It should show one gain and catch the core breakage that would make that gain false.")
     parser.add_argument("--promise", required=promise_required, default="Control rerun of the current baseline" if not promise_required else None, help="Small promise for this run.")
     parser.add_argument("--scope", action="append", default=[], help="Path in scope for the change. Repeat for multiple paths.")
     parser.add_argument("--metric-pattern", help="Regex with one capture group for a numeric metric in command output.")
@@ -574,7 +578,7 @@ def build_parser() -> argparse.ArgumentParser:
     prove_parser.set_defaults(func=cmd_prove)
 
     init_parser = subparsers.add_parser("init", help=argparse.SUPPRESS, description="Create the local .tereo workspace.")
-    init_parser.add_argument("--check", help="Default shell command used as the fixed check.")
+    init_parser.add_argument("--check", help="Default shell command used as the fixed check. It should show one gain and catch the core breakage that would make that gain false.")
     init_parser.add_argument("--preset", choices=sorted(PRESETS), help="Starter check preset for common repo shapes.")
     init_parser.add_argument("--metric-pattern", help="Default regex with one capture group for a numeric metric.")
     init_parser.add_argument("--direction", choices=["lower", "higher"], help="Default optimization direction.")

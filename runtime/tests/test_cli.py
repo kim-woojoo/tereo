@@ -160,7 +160,7 @@ class RuntimeFlowTests(unittest.TestCase):
                 self.assertEqual(baseline_code, 0)
                 self.assertIn("verdict: hold", baseline_output)
                 self.assertIn("evidence: 3 runs", baseline_output)
-                self.assertIn("next: make one small change", baseline_output)
+                self.assertIn("next: make one small change, keep the same check", baseline_output)
 
                 try_code, try_output = self.run_main(
                     [
@@ -251,6 +251,7 @@ class RuntimeFlowTests(unittest.TestCase):
                 self.assertEqual(init_code, 0)
                 self.assertIn("preset: pytest", init_output)
                 self.assertIn("default check: pytest -q", init_output)
+                self.assertIn("good check: show one gain and catch the core breakage that would make that gain false.", init_output)
 
                 state = cli.load_state(workspace)
                 self.assertEqual(state["default_check"], "pytest -q")
@@ -267,6 +268,7 @@ class RuntimeFlowTests(unittest.TestCase):
                 code, output = self.run_main(["doctor"])
                 self.assertEqual(code, 0)
                 self.assertIn("suggested first checks:", output)
+                self.assertIn("good check: show one gain and catch the core breakage that would make that gain false.", output)
                 self.assertIn("try: tereo init --preset pytest", output)
                 self.assertIn("try: tereo init --preset npm-test", output)
                 self.assertIn("try: tereo init --preset smoke", output)

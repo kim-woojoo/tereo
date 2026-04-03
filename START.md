@@ -24,6 +24,8 @@ tereo init --preset pytest
 tereo prove --promise "Current tests are the baseline"
 ```
 
+A good first check shows one gain and catches the core breakage that would make that gain false.
+
 4. Make one small change, then prove it.
 
 ```bash
@@ -54,6 +56,7 @@ Freeze a promise, scope, check, proof rule, and stop condition.
 Think in Promise -> Check -> Receipt.
 Use `tereo prove` as the default path.
 Keep only what earns a receipt.
+If a new failure makes the current win false, keep it in the same loop.
 ```
 
 The AI may write the change.
@@ -84,6 +87,9 @@ If you are not sure where to start, choose the smallest check that already matte
   for a shell or mixed repo with a simple pass/fail check
 - `./bench.sh`
   for a metric-printing benchmark such as latency or memory
+
+The first check should not only show the hoped-for gain.
+It should also catch the core breakage that would turn that gain into a false win.
 
 If the first check is flaky, shrink it before trusting the loop.
 
