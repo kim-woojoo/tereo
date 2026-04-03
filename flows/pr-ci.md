@@ -26,6 +26,9 @@ That example workflow does five things:
 It starts without `control`.
 Add `tereo control --repeat 5` only when the check is noisy or metric-based.
 
+The fixed check should show the gain you want and catch the core breakage
+that would make that gain false.
+
 The sticky update comes from:
 
 ```bash
@@ -56,4 +59,5 @@ It is:
 - what changed
 - what check stayed fixed
 - what got better
+- what did not break
 - how strong the evidence was

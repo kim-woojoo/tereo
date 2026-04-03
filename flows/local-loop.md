@@ -14,3 +14,5 @@ tereo log
 The point is simple:
 do not trust the patch first.
 Trust the receipt.
+Keep the same check.
+If the patch hits the promise but breaks the core, that is not a keep.

@@ -15,6 +15,7 @@ Its instinct is:
 It does not ask you to adopt one special test runner or benchmark.
 You bring the check command. The runtime wraps it in a small proof workflow.
 A check can be a test suite, a smoke script, a CLI expectation, or a latency run.
+A good check shows the local gain you want and catches the core breakage that would make that gain false.
 
 ## Public Model
 
@@ -195,6 +196,16 @@ That usually means the patch did not hold.
 
 Do not keep pushing the same failed patch through the loop.
 
+### I found a new problem while proving
+
+Do not ask the current receipt to ignore it first.
+
+If the new problem makes the current win false, it belongs to this loop.
+Tighten the current check, or drop the patch.
+
+If the new problem does not make the current win false, keep it out of this loop.
+Make it the next promise instead.
+
 ### My first check feels flaky
 
 Do not push the loop harder yet.
@@ -213,7 +224,7 @@ TEREO keeps the front door small, but the thinking is serious:
 - `promise`
   The claim you want to test.
 - `check`
-  The repeated command that decides whether the claim holds.
+  The repeated command that decides whether the claim holds and whether the gain is real enough to keep.
 - `receipt`
   The human and machine proof left behind.
 

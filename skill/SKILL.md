@@ -23,7 +23,7 @@ Use this rulebook when one repeatable check can judge one small change.
 ## Loop
 
 1. write one small promise
-2. freeze one fixed check
+2. freeze one fixed check that sees both the gain and the core you must not break
 3. run `tereo prove`
 4. make one small change
 5. run `tereo prove` again
@@ -57,6 +57,8 @@ Use this rulebook when one repeatable check can judge one small change.
 - prefer one file or one tight file cluster
 - keep one primary hypothesis per run
 - do not change the target and the check in the same pass
+- if a new failure makes the current win false, it belongs to this loop
+- only move a new problem to the next promise when it does not make the current receipt false
 - treat crashes and drift as data
 - if the same failure repeats, change tactic
 - `hold` means not yet proven, not failed
