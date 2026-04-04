@@ -586,6 +586,16 @@ class RuntimeFlowTests(unittest.TestCase):
                 self.assertIn("try: tereo init --preset smoke", output)
                 self.assertIn("try: tereo init --preset latency", output)
 
+    def test_doctor_detects_runtime_tests_layout_as_python_preset(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            workspace = Path(tempdir)
+            (workspace / "runtime" / "tests").mkdir(parents=True)
+
+            with pushd(workspace):
+                code, output = self.run_main(["doctor"])
+                self.assertEqual(code, 0)
+                self.assertIn("try: tereo init --preset pytest", output)
+
     def test_control_rerun_marks_small_drift_stable_and_large_drift_as_drift(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:
             workspace = Path(tempdir)

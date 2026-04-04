@@ -50,6 +50,8 @@ pip install tereo
 tereo demo
 ```
 
+If you prefer module execution, `python3 -m tereo demo` is the same runtime.
+
 What it looks like:
 
 <p>
@@ -84,11 +86,7 @@ pip install tereo
 tereo --help
 ```
 
-If you prefer module execution, this also works:
-
-```bash
-python3 -m tereo --help
-```
+If you prefer module execution, `python3 -m tereo --help` is the same runtime.
 
 Use your own check.
 Keep your own workflow.

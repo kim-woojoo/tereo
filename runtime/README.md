@@ -41,7 +41,8 @@ If you do not pass `--repeat`, TEREO starts small and measures deeper when the s
 pip install tereo
 ```
 
-If you prefer module execution, use `python3 -m tereo` instead.
+The default path is the short command: `tereo`.
+If you prefer module execution, `python3 -m tereo` is the same runtime.
 
 If you are working inside this repo instead:
 

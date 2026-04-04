@@ -2,6 +2,9 @@ name: Publish to PyPI
 
 on:
   workflow_dispatch:
+  push:
+    tags:
+      - "v*"
 
 jobs:
   build:
@@ -23,6 +26,15 @@ jobs:
 
       - name: Build sdist and wheel
         run: python -m build
+
+      - name: Smoke test installed commands
+        run: |
+          python -m venv .venv-smoke
+          . .venv-smoke/bin/activate
+          python -m pip install --upgrade pip
+          python -m pip install dist/*.whl
+          tereo --help
+          python -m tereo --help
 
       - name: Upload distributions
         uses: actions/upload-artifact@v6

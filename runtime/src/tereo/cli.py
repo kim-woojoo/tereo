@@ -239,7 +239,17 @@ def init_preset(args: argparse.Namespace) -> Dict[str, Any]:
 
 def detect_presets(cwd: Path) -> list[tuple[str, str]]:
     found: list[tuple[str, str]] = []
-    if (cwd / "tests").exists() or (cwd / "pytest.ini").exists() or (cwd / "pyproject.toml").exists():
+    if any(
+        path.exists()
+        for path in [
+            cwd / "tests",
+            cwd / "test",
+            cwd / "runtime" / "tests",
+            cwd / "pytest.ini",
+            cwd / "pyproject.toml",
+            cwd / "tox.ini",
+        ]
+    ):
         found.append(("pytest", "Python tests or test layout detected."))
     if (cwd / "package.json").exists():
         found.append(("npm-test", "package.json detected."))
