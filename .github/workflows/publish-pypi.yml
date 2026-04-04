@@ -3,11 +3,12 @@ name: Publish to PyPI
 on:
   workflow_dispatch:
   push:
-    tags:
-      - "v*"
+    branches:
+      - "main"
 
 jobs:
   build:
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'Release ')
     name: Build distributions
     runs-on: ubuntu-latest
     permissions:
@@ -43,6 +44,7 @@ jobs:
           path: dist/
 
   publish:
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'Release ')
     name: Publish to PyPI
     needs: build
     runs-on: ubuntu-latest
