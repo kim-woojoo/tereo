@@ -81,11 +81,19 @@ A good `check` does two things at once:
 
 If a patch hits the promise but breaks the core, that is a false gain, not a `keep`.
 
+## Metric Law
+
+- for metric proofs, prefer one explicit line: `TEREO_METRIC name value direction [unit]`
+- if you can shape the check output, make the metric say its own name instead of relying on regex guessing
+- if the check already prints a known line like `latency_ms: 12.3`, TEREO can auto-seed that on the first baseline
+- if the metric is custom and you cannot change the output, pass `--metric-pattern`
+
 ## Default Commands
 
 ```bash
 tereo prove --promise "Current parser behavior is the baseline"
 tereo prove --scope src/parser.py --promise "Empty input returns []"
+tereo prove --check "./bench.sh" --promise "Current latency is the baseline"
 tereo show
 tereo log
 ```
@@ -118,6 +126,7 @@ tereo log
 - one main agent owns the decision
 - subagents are optional
 - keep one writer per overlapping scope
+- named metric first, regex second
 
 Return:
 - the promise

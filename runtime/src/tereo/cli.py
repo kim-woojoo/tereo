@@ -15,7 +15,17 @@ from tereo.judge import (
     derive_experiment_confidence,
     validate_repeat,
 )
-from tereo.measure import merge_summaries, metric_change, run_check_series, summarize_control_runs, summarize_measurement_runs
+from tereo.measure import (
+    build_run_record,
+    extract_metric,
+    extract_named_metric,
+    merge_summaries,
+    metric_change,
+    run_check,
+    run_check_series,
+    summarize_control_runs,
+    summarize_measurement_runs,
+)
 from tereo.receipt import (
     build_log_text,
     build_pr_comment_text,
@@ -258,6 +268,49 @@ def detect_presets(cwd: Path) -> list[tuple[str, str]]:
     if (cwd / "bench.sh").exists():
         found.append(("latency", "bench.sh detected."))
     return found
+
+
+def auto_seed_metric_context(metric_context: Dict[str, Any], output: str) -> Optional[Dict[str, Any]]:
+    if metric_context.get("pattern"):
+        return None
+
+    named = extract_named_metric(output)
+    if named:
+        return {
+            "pattern": named["pattern"],
+            "direction": named["direction"],
+            "name": named["name"],
+            "unit": named["unit"],
+        }
+
+    matches: list[Dict[str, Any]] = []
+    for preset in PRESETS.values():
+        pattern = preset.get("metric_pattern")
+        direction = preset.get("direction")
+        if not pattern or not direction:
+            continue
+        if extract_metric(output, pattern) is None:
+            continue
+        candidate = {
+            "pattern": pattern,
+            "direction": direction,
+            "name": preset.get("metric_name"),
+            "unit": preset.get("metric_unit"),
+        }
+        if candidate not in matches:
+            matches.append(candidate)
+    return matches[0] if len(matches) == 1 else None
+
+
+def merge_metric_context(metric_context: Dict[str, Any], seeded: Dict[str, Any]) -> Dict[str, Any]:
+    return {
+        "pattern": metric_context.get("pattern") or seeded.get("pattern"),
+        "direction": metric_context.get("direction") or seeded.get("direction"),
+        "name": seeded.get("name") if metric_context.get("name") in {None, "", "metric"} else metric_context.get("name"),
+        "unit": metric_context.get("unit") or seeded.get("unit"),
+    }
+
+
 def build_run(
     *,
     check: str,
@@ -271,6 +324,29 @@ def build_run(
     if control:
         return summarize_control_runs(runs, check, metric_context, timeout_seconds)
     return summarize_measurement_runs(runs, check, metric_context, timeout_seconds)
+
+
+def build_first_baseline_run(
+    *,
+    args: argparse.Namespace,
+    proof: Dict[str, Any],
+    check: str,
+    cwd: Path,
+    metric_context: Dict[str, Any],
+    timeout_seconds: Optional[float],
+) -> tuple[Dict[str, Any], Dict[str, Any], Dict[str, Any]]:
+    first_result = run_check(check, cwd, timeout_seconds=timeout_seconds)
+    seeded = auto_seed_metric_context(metric_context, first_result["output"])
+    if seeded:
+        metric_context = merge_metric_context(metric_context, seeded)
+        persist_metric_context(proof, metric_context)
+
+    repeat = auto_repeat_target("baseline", args, metric_context, None)
+    runs = [build_run_record(metric_context, first_result)]
+    if repeat > 1:
+        runs.extend(run_check_series(check, cwd, metric_context, repeat=repeat - 1, timeout_seconds=timeout_seconds))
+    run = summarize_measurement_runs(runs, check, metric_context, timeout_seconds)
+    return run, metric_context, proof
 
 
 def auto_repeat_target(
@@ -360,15 +436,26 @@ def execute_run_locked(kind: str, args: argparse.Namespace, proof_key: str) -> t
     state = load_state(cwd)
     check, metric_context, timeout_seconds, proof = resolve_proof_context(args, state, proof_key)
     baselines = load_baselines(cwd, proof, kind)
-    repeat = auto_repeat_target(kind, args, metric_context, baselines["baseline"])
-    run = build_run(
-        check=check,
-        cwd=cwd,
-        metric_context=metric_context,
-        timeout_seconds=timeout_seconds,
-        repeat=repeat,
-        control=kind == "control",
-    )
+    if kind == "baseline" and not metric_context.get("pattern"):
+        run, metric_context, proof = build_first_baseline_run(
+            args=args,
+            proof=proof,
+            check=check,
+            cwd=cwd,
+            metric_context=metric_context,
+            timeout_seconds=timeout_seconds,
+        )
+    else:
+        repeat = auto_repeat_target(kind, args, metric_context, baselines["baseline"])
+        run = build_run(
+            check=check,
+            cwd=cwd,
+            metric_context=metric_context,
+            timeout_seconds=timeout_seconds,
+            repeat=repeat,
+            control=kind == "control",
+        )
+    repeat = run.get("repeat_count", 1)
     receipt = build_receipt_for_run(kind=kind, args=args, proof=proof, run=run, baselines=baselines, metric_context=metric_context)
     if should_retry_try(kind, args, receipt, baselines["baseline"], repeat):
         extra_run = build_run(

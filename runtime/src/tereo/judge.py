@@ -33,7 +33,7 @@ def compare_metric(
 ) -> Tuple[str, str]:
     details = metric_change(baseline_metric, current_metric, direction)
     if details["status"] is None:
-        return ("review", "No comparable metric was found.")
+        return ("review", "No comparable metric was found. Print `TEREO_METRIC name value direction [unit]` or pass `--metric-pattern`.")
     before = format_metric_value(baseline_metric, metric_unit)
     after = format_metric_value(current_metric, metric_unit)
     delta = format_metric_value(details["absolute_change"], metric_unit)

@@ -217,6 +217,107 @@ class RuntimeFlowTests(unittest.TestCase):
                 self.assertIn("| hold | latency: 10.000000 ms | Current latency is the baseline", log_output)
                 self.assertIn("| keep | latency: 10.000000 ms -> 8.000000 ms; 2.000000 ms better (20.00%) | Cache hits lower latency", log_output)
 
+    def test_prove_auto_seeds_named_metric_protocol_on_first_baseline(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            workspace = Path(tempdir)
+            with pushd(workspace):
+                baseline_code, baseline_output = self.run_main(
+                    [
+                        "prove",
+                        "--check",
+                        'python3 -c "print(\'TEREO_METRIC latency 10 lower ms\')"',
+                        "--promise",
+                        "Current latency is the baseline",
+                    ]
+                )
+                self.assertEqual(baseline_code, 0)
+                self.assertIn("verdict: hold", baseline_output)
+                self.assertIn("latency: 10.000000 ms", baseline_output)
+                self.assertIn("evidence: 3 runs", baseline_output)
+
+                state = cli.load_state(workspace)
+                proof = state["proofs"][state["active_proof"]]
+                self.assertEqual(proof["metric_name"], "latency")
+                self.assertEqual(proof["metric_direction"], "lower")
+                self.assertEqual(proof["metric_unit"], "ms")
+
+                try_code, try_output = self.run_main(
+                    [
+                        "prove",
+                        "--check",
+                        'python3 -c "print(\'TEREO_METRIC latency 8 lower ms\')"',
+                        "--promise",
+                        "Cache hits lower latency",
+                    ]
+                )
+                self.assertEqual(try_code, 0)
+                self.assertIn("verdict: keep", try_output)
+                self.assertIn("latency: 10.000000 ms -> 8.000000 ms", try_output)
+
+    def test_prove_auto_seeds_known_metric_preset_on_first_baseline(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            workspace = Path(tempdir)
+            with pushd(workspace):
+                baseline_code, baseline_output = self.run_main(
+                    [
+                        "prove",
+                        "--check",
+                        'python3 -c "print(\'latency_ms: 10\')"',
+                        "--promise",
+                        "Current latency is the baseline",
+                    ]
+                )
+                self.assertEqual(baseline_code, 0)
+                self.assertIn("verdict: hold", baseline_output)
+                self.assertIn("latency: 10.000000 ms", baseline_output)
+                self.assertIn("evidence: 3 runs", baseline_output)
+
+                state = cli.load_state(workspace)
+                proof = state["proofs"][state["active_proof"]]
+                self.assertEqual(proof["metric_name"], "latency")
+                self.assertEqual(proof["metric_direction"], "lower")
+                self.assertEqual(proof["metric_unit"], "ms")
+
+                try_code, try_output = self.run_main(
+                    [
+                        "prove",
+                        "--check",
+                        'python3 -c "print(\'latency_ms: 8\')"',
+                        "--promise",
+                        "Cache hits lower latency",
+                    ]
+                )
+                self.assertEqual(try_code, 0)
+                self.assertIn("verdict: keep", try_output)
+                self.assertIn("latency: 10.000000 ms -> 8.000000 ms", try_output)
+
+    def test_missing_metric_note_points_to_named_metric_or_pattern(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            workspace = Path(tempdir)
+            with pushd(workspace):
+                baseline_code, _ = self.run_main(
+                    [
+                        "prove",
+                        "--check",
+                        'python3 -c "print(\'ready\')"',
+                        "--promise",
+                        "Current output is the baseline",
+                    ]
+                )
+                self.assertEqual(baseline_code, 0)
+
+                try_code, try_output = self.run_main(
+                    [
+                        "prove",
+                        "--check",
+                        'python3 -c "print(\'ready\')"',
+                        "--promise",
+                        "Still no comparable metric",
+                    ]
+                )
+                self.assertEqual(try_code, 0)
+                self.assertIn("No comparable metric was found. Print `TEREO_METRIC name value direction [unit]` or pass `--metric-pattern`.", try_output)
+
     def test_prove_keeps_baselines_separate_when_check_changes(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:
             workspace = Path(tempdir)

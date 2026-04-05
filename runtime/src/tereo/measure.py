@@ -11,6 +11,12 @@ from typing import Any, Dict, List, Optional
 
 from tereo.constants import TIMEOUT_EXIT_CODE
 
+NAMED_METRIC_VALUE_PATTERN = r"^TEREO_METRIC\s+\S+\s+([-+]?(?:\d+(?:\.\d+)?|\.\d+))\s+(?:lower|higher)(?:\s+\S+)?\s*$"
+_NAMED_METRIC_LINE = re.compile(
+    r"^TEREO_METRIC\s+([A-Za-z][A-Za-z0-9._-]*)\s+([-+]?(?:\d+(?:\.\d+)?|\.\d+))\s+(lower|higher)(?:\s+(\S+))?\s*$",
+    re.MULTILINE,
+)
+
 def run_check(command: str, cwd: Path, timeout_seconds: Optional[float] = None) -> Dict[str, Any]:
     started = dt.datetime.now(dt.timezone.utc)
     timed_out = False
@@ -52,7 +58,24 @@ def run_check(command: str, cwd: Path, timeout_seconds: Optional[float] = None) 
     }
 
 
+def extract_named_metric(output: str) -> Optional[Dict[str, Any]]:
+    matches = _NAMED_METRIC_LINE.findall(output)
+    if len(matches) != 1:
+        return None
+    name, value, direction, unit = matches[0]
+    return {
+        "pattern": NAMED_METRIC_VALUE_PATTERN,
+        "name": name,
+        "value": float(value),
+        "direction": direction,
+        "unit": unit or None,
+    }
+
+
 def extract_metric(output: str, pattern: Optional[str]) -> Optional[float]:
+    if pattern == NAMED_METRIC_VALUE_PATTERN:
+        named = extract_named_metric(output)
+        return None if named is None else named["value"]
     match = None if not pattern else re.search(pattern, output, re.MULTILINE)
     return None if not match else float(match.group(1))
 
