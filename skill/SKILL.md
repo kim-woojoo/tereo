@@ -27,15 +27,21 @@ Use this rulebook when one repeatable check can judge one small change.
 
 ## Runtime
 
-Prefer the installed `tereo` CLI.
+Use the runtime that matches the truth you are working against.
 
-If it is missing:
-
-- inside the TEREO repo root, install with `pip install -e .`
+- inside the TEREO repo or an internal dev loop, prefer source truth: `PYTHONPATH=runtime/src python3 -m tereo ...`
+- if you are in a clean virtualenv and want an editable install inside the TEREO repo, `pip install -e .` is fine
 - inside a repo that vendors TEREO, install with `pip install -e ./tereo`
-- otherwise say that the TEREO runtime is not available yet
+- outside internal development, prefer the installed `tereo` CLI as release truth
+- if neither source truth nor release truth is available, say that the TEREO runtime is not available yet
 
 Do not fake a TEREO receipt without running the real CLI.
+
+## Truth Model
+
+- internal work: repo runtime wins
+- public guidance: installed CLI wins
+- do not teach repo-only behavior as general release truth
 
 ## Lane Law
 
@@ -127,6 +133,7 @@ tereo log
 - subagents are optional
 - keep one writer per overlapping scope
 - named metric first, regex second
+- source truth first in the TEREO repo, release truth outside it
 
 Return:
 - the promise

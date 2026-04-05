@@ -47,8 +47,11 @@ If you prefer module execution, `python3 -m tereo` is the same runtime.
 If you are working inside this repo instead:
 
 ```bash
-pip install -e .
+PYTHONPATH=runtime/src python3 -m tereo --help
 ```
+
+That is the safest source-truth path while developing the runtime itself.
+If you are in a clean virtualenv and want an editable install, `pip install -e .` is also fine.
 
 ## Developer Setup
 
@@ -97,7 +100,22 @@ tereo show
 tereo log
 ```
 
-Use `--preset latency` when your check is performance.
+Use `--preset latency` when your check is performance and you want a seeded benchmark starter.
+
+## Metric Proofs
+
+The most direct metric path is to let the check say what the metric means:
+
+```text
+TEREO_METRIC latency 12.3 lower ms
+```
+
+If the first baseline sees one line like that, TEREO seeds the proof metric automatically.
+
+Known benchmark lines can also auto-seed on the first baseline.
+For example, `latency_ms: 12.3` matches the built-in latency preset.
+
+Use `--metric-pattern` only when the metric is custom and the check output cannot be changed.
 
 ## First-Check Shortcuts
 

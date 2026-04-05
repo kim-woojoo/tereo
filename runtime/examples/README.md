@@ -8,6 +8,42 @@ If you want the fastest possible first win, start here:
 bash runtime/examples/quickstart.sh
 ```
 
+## GIF Capture
+
+If you want one clean install + demo recording:
+
+```bash
+python3 -m pip install tereo
+tereo demo
+```
+
+That is the shortest visible path.
+If the short command is not on `PATH` yet, `python3 -m tereo demo` is the same runtime.
+
+If you want the same real install and run inside a temporary sandbox, with cleanup after recording:
+
+```bash
+bash runtime/examples/capture-demo.sh
+```
+
+It creates a fresh temp workspace, runs the real `pip install tereo`, runs the real `tereo demo`, and deletes the sandbox on exit.
+It also types the visible commands slowly enough to record and pauses on the final `keep` verdict for a beat.
+Add `--workspace /tmp/tereo-demo` if you want a shorter path on screen, or `--keep-workspace` if you want to inspect the sandbox after.
+
+If you want the same flow from this repo instead of PyPI:
+
+```bash
+bash runtime/examples/capture-demo.sh --source local
+```
+
+Recording tips:
+
+- keep the terminal around 90 columns
+- use a large mono font
+- record only the terminal window
+- let the last frame sit for 2 seconds
+- if you are on macOS, `Cmd+Shift+5` is enough
+
 ## PR Comment Integration
 
 If you want one sticky receipt comment in every trusted same-repo PR:
@@ -67,7 +103,30 @@ tereo log
 
 ## Metric Mode
 
-When your check prints a number, you can compare it with a regex:
+If your benchmark can print one explicit metric line, that is the cleanest path:
+
+```bash
+tereo prove \
+  --check "./bench.sh" \
+  --promise "Current latency is the baseline"
+
+tereo prove \
+  --scope src/cache.py \
+  --promise "Cache hits lower latency"
+
+tereo show
+tereo log
+```
+
+With output like:
+
+```text
+TEREO_METRIC latency 12.3 lower ms
+```
+
+Known lines such as `latency_ms: 12.3` can also auto-seed on the first baseline.
+
+If your check prints a custom number and cannot be changed, fall back to a regex:
 
 ```bash
 tereo prove \
