@@ -401,9 +401,12 @@ def build_receipt_for_run(
     if kind == "try":
         receipt["evidence"].update(derive_experiment_confidence(baselines["baseline"], receipt, metric_context))
         if result_block(receipt).get("verdict") == "keep" and evidence_block(receipt).get("confidence") == "low":
+            downgraded_note = "The signal is positive, but repeated checks are still too close to noise."
+            if evidence_block(receipt).get("confidence_basis") == "absolute_gain":
+                downgraded_note = "The signal is positive, but zero-baseline evidence is not strong enough yet."
             receipt["result"] = {
                 "verdict": "review",
-                "note": "The signal is positive, but repeated checks are still too close to noise.",
+                "note": downgraded_note,
             }
     elif kind == "control":
         receipt["evidence"].update(

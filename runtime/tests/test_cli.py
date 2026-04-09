@@ -291,6 +291,45 @@ class RuntimeFlowTests(unittest.TestCase):
                 self.assertIn("verdict: keep", try_output)
                 self.assertIn("latency: 10.000000 ms -> 8.000000 ms", try_output)
 
+    def test_zero_baseline_positive_named_metric_reaches_keep_high(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            workspace = Path(tempdir)
+            with pushd(workspace):
+                baseline_code, baseline_output = self.run_main(
+                    [
+                        "prove",
+                        "--check",
+                        'python3 -c "print(\'TEREO_METRIC coverage 0 higher pts\')"',
+                        "--promise",
+                        "Current coverage is the baseline",
+                    ]
+                )
+                self.assertEqual(baseline_code, 0)
+                self.assertIn("verdict: hold", baseline_output)
+                self.assertIn("coverage: 0.000000 pts", baseline_output)
+
+                try_code, try_output = self.run_main(
+                    [
+                        "prove",
+                        "--check",
+                        'python3 -c "print(\'TEREO_METRIC coverage 4 higher pts\')"',
+                        "--promise",
+                        "Surface locality increases coverage",
+                    ]
+                )
+                self.assertEqual(try_code, 0)
+                self.assertIn("verdict: keep", try_output)
+                self.assertIn("confidence=high", try_output)
+                self.assertIn("coverage: 0.000000 pts -> 4.000000 pts", try_output)
+
+                state = cli.load_state(workspace)
+                latest_receipt = cli.read_receipt(workspace, state["latest_receipt"])
+                self.assertEqual(latest_receipt["result"]["verdict"], "keep")
+                self.assertEqual(latest_receipt["evidence"]["confidence"], "high")
+                self.assertEqual(latest_receipt["evidence"]["confidence_basis"], "absolute_gain")
+                self.assertGreater(latest_receipt["evidence"]["win"], 0.99)
+                self.assertGreater(latest_receipt["evidence"]["gain_ci"][0], 0.0)
+
     def test_missing_metric_note_points_to_named_metric_or_pattern(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:
             workspace = Path(tempdir)
@@ -402,6 +441,21 @@ class RuntimeFlowTests(unittest.TestCase):
                 self.assertIn("Current latency is the original baseline", log_output)
                 self.assertIn("Cache hits lower latency for the original baseline", log_output)
                 self.assertNotIn("Current latency is a separate baseline", log_output)
+
+                _, show_output = self.run_main(["show", "--proof", "original"])
+                self.assertIn("KEEP", show_output)
+                self.assertIn("promise: Cache hits lower latency for the original baseline", show_output)
+                self.assertNotIn("Current latency is a separate baseline", show_output)
+
+                _, report_output = self.run_main(["report", "--proof", "original"])
+                self.assertIn("Current", report_output)
+                self.assertIn("Cache hits lower latency for the original baseline", report_output)
+                self.assertNotIn("Current latency is a separate baseline", report_output)
+
+                _, comment_output = self.run_main(["comment", "--proof", "original"])
+                self.assertIn("## TEREO", comment_output)
+                self.assertIn("Cache hits lower latency for the original baseline", comment_output)
+                self.assertNotIn("Current latency is a separate baseline", comment_output)
 
     def test_parallel_proofs_do_not_clobber_each_other(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:

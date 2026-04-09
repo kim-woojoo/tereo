@@ -266,6 +266,32 @@ def derive_experiment_confidence(
     gain_high = bootstrap.get("improvement_ci_high")
     win = bootstrap.get("win_probability")
     interval_excludes_zero = gain_low is not None and gain_high is not None and (gain_low > 0 or gain_high < 0)
+    unit = after_metric.get("unit")
+
+    if before_metric.get("after") == 0:
+        if not law(point_gain, None):
+            confidence, reason = "low", "Repeated checks do not show a positive absolute improvement from the zero baseline."
+        elif interval_excludes_zero and win is not None and win >= 0.99:
+            confidence, reason = "high", "Repeated checks strongly support a real improvement from the zero baseline."
+        elif win is not None and win >= 0.95:
+            confidence, reason = "medium", "Repeated checks support a likely improvement from the zero baseline, but the evidence is not fully settled."
+        else:
+            confidence, reason = "low", "Repeated checks show a positive gain, but zero-baseline evidence is not strong enough yet."
+
+        return {
+            "confidence": confidence,
+            "note": (
+                f"{reason} win_probability={format_probability(win)}, "
+                f"improvement_95ci={format_interval(gain_low, gain_high, unit)}, "
+                f"absolute_gain={format_metric_value(point_gain, unit)}."
+            ),
+            "signal": None,
+            "noise": None,
+            "ratio": None,
+            "win": win,
+            "gain_ci": [gain_low, gain_high],
+            "confidence_basis": "absolute_gain",
+        }
 
     noise = None
     if point_gain is not None and before_metric.get("after") not in (None, 0):
@@ -295,4 +321,5 @@ def derive_experiment_confidence(
         "ratio": ratio,
         "win": win,
         "gain_ci": [gain_low, gain_high],
+        "confidence_basis": "percent_gain",
     }
